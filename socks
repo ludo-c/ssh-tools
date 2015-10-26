@@ -1,0 +1,80 @@
+#!/bin/sh
+# Create a socks v5 proxy
+# Uses socks.cfg file with "user", "host", and "port" variables
+# http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
+
+config_file=socks.cfg
+
+if [ -f "${config_file}" ]; then
+	source ./${config_file}   # read user, host and port
+else
+	echo -e "user=\nhost=\nport=\n" > ${config_file}
+	echo "config file ${config_file} created, please fill it"
+	exit 2
+fi
+
+if [ -z "$user" -o -z "$host" -o -z "$port" ]; then
+	echo "user, host, and port variables are needed"
+	exit 2
+fi
+
+name=$(basename $0)
+
+# PID and logs
+pid_file=/tmp/${name}.pid
+log_file=/tmp/${name}.log
+mkdir -p $(dirname $pid_file) $(dirname $log_file)
+
+function stop {
+	if [ -f $pid_file ] ; then
+		echo -n "Stopping ${name}..."
+		kill -9 $(cat $pid_file)
+		rm $pid_file
+		echo "OK"
+	fi
+}
+
+function start {
+	stop
+	echo -n "Starting ${name}..."
+	command="ssh -o ExitOnForwardFailure=yes -nNTD $port $user@$host"
+	($command &> $log_file) &
+	echo $! > $pid_file
+	until nc -zw30 localhost $port &> /dev/null ; do
+		echo -n "."
+		sleep 1
+	done
+	echo " OK"
+}
+
+function check {
+	if nc -zw30 localhost $port &> /dev/null ; then
+		if [ ! -z "$1" ]; then
+			# Handle /etc/hosts
+			ip=$(getent hosts ${host} | cut -d " " -f1)
+			# Needs proxychains
+			latency=$(proxychains nmap -sP ${ip} | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
+			echo $latency
+		else
+			echo "actif"
+		fi
+		return 0
+	else
+		echo "inactif"
+		return 1
+	fi
+}
+
+case $1 in
+	"start")
+		start ;;
+	"stop")
+		stop  ;;
+	"check")
+		check ; exit $? ;;
+	"latency")
+		check latency ; exit $? ;;
+	*)
+		echo "usage: ${name} start|stop|check|latency"
+		exit 1
+esac
