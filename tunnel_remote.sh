@@ -1,11 +1,21 @@
 #!/bin/sh
 
-# use : remote_port=2222 local_port=22 dest_host="bob@localhost" ./tunnel_remote.sh
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
 
 options="ExitOnForwardFailure yes"
 name=$(basename $0)
 lf=/tmp/${name}_pid_lock_file
+
+if [ "$#" -ne 3 ]; then
+	echo "Bad parameters"
+	echo "use : ./tunnel_remote.sh <remote_port> <local_port> <dest_host>"
+	echo "eg : ./tunnel_remote.sh 2222 22 bob@host"
+	exit 2
+fi
+
+remote_port=$1
+local_port=$2
+dest_host=$3
 
 # http://stackoverflow.com/questions/1440967/how-do-i-make-sure-my-bash-script-isnt-already-running
 # create empty lock file if none exists
