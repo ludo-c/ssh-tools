@@ -20,37 +20,30 @@ fi
 
 name=$(basename $0)
 
-# PID and logs
-pid_file=/tmp/${name}.pid
-log_file=/tmp/${name}.log
-mkdir -p $(dirname $pid_file) $(dirname $log_file)
+ctrl_path="ctrl-socks-socket"
 
 stop() {
-	if [ -f $pid_file ] ; then
-		echo -n "Stopping ${name}..."
-		kill -9 $(cat $pid_file)
-		rm $pid_file
-		echo "OK"
-	fi
+	echo -n "Stopping ${name}... "
+	ssh -S ${ctrl_path} -O exit $user@$host > /dev/null 2>&1
+	echo "OK"
 }
 
 start() {
-	stop
-	echo -n "Starting ${name}..."
-	command="ssh -o ExitOnForwardFailure=yes -nNTD $port $user@$host"
-	(eval ${command} &> $log_file) &
-	echo $! > $pid_file
-	i=0
-	until nc -zw3 localhost $port &> /dev/null ; do
-		echo -n "."
-		sleep 1
-		i=$((i+1))
-		if [ $i -eq 4 ]; then
-			echo "ERROR"
-			exit 3
-		fi
-	done
-	echo " OK"
+	output=$(ssh -S ${ctrl_path} -O check $user@$host 2>&1)
+	rc=$?  # 255 when socket doest not exist, 0 otherwise
+	if [ $rc -eq 0 ]; then
+		echo ${output}
+		exit 3
+	fi
+	echo -n "Starting ${name}... "
+	options="ExitOnForwardFailure=yes"
+	ssh -o ${options} -MS ${ctrl_path} -nfNTD $port $user@$host
+	if [ $? -ne 0 ]; then
+		echo "ERROR"
+		exit 4
+	else
+		echo "OK"
+	fi
 }
 
 check() {
