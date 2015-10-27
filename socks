@@ -40,9 +40,15 @@ start() {
 	command="ssh -o ExitOnForwardFailure=yes -nNTD $port $user@$host"
 	(eval ${command} &> $log_file) &
 	echo $! > $pid_file
-	until nc -zw30 localhost $port &> /dev/null ; do
+	i=0
+	until nc -zw3 localhost $port &> /dev/null ; do
 		echo -n "."
 		sleep 1
+		i=$((i+1))
+		if [ $i -eq 4 ]; then
+			echo "ERROR"
+			exit 3
+		fi
 	done
 	echo " OK"
 }
