@@ -72,7 +72,10 @@ case $1 in
 		check ; exit $? ;;
 	"latency")
 		check latency ; exit $? ;;
+	"restart")
+		stop
+		start  ;;
 	*)
-		echo "usage: ${name} start|stop|check|latency"
+		echo "usage: ${name} start|stop|restart|check|latency"
 		exit 1
 esac
