@@ -6,7 +6,7 @@
 config_file=socks.cfg
 
 if [ -f "${config_file}" ]; then
-	source ./${config_file}   # read user, host and port
+	. ./${config_file}   # read user, host and port
 else
 	echo -e "user=\nhost=\nport=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
@@ -25,7 +25,7 @@ pid_file=/tmp/${name}.pid
 log_file=/tmp/${name}.log
 mkdir -p $(dirname $pid_file) $(dirname $log_file)
 
-function stop {
+stop() {
 	if [ -f $pid_file ] ; then
 		echo -n "Stopping ${name}..."
 		kill -9 $(cat $pid_file)
@@ -34,11 +34,11 @@ function stop {
 	fi
 }
 
-function start {
+start() {
 	stop
 	echo -n "Starting ${name}..."
 	command="ssh -o ExitOnForwardFailure=yes -nNTD $port $user@$host"
-	($command &> $log_file) &
+	(eval ${command} &> $log_file) &
 	echo $! > $pid_file
 	until nc -zw30 localhost $port &> /dev/null ; do
 		echo -n "."
@@ -47,7 +47,7 @@ function start {
 	echo " OK"
 }
 
-function check {
+check() {
 	if nc -zw30 localhost $port &> /dev/null ; then
 		if [ ! -z "$1" ]; then
 			# Handle /etc/hosts
