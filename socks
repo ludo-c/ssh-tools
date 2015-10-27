@@ -3,7 +3,8 @@
 # Uses socks.cfg file with "user", "host", and "port" variables
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
 
-config_file=socks.cfg
+name=$(basename $0)
+config_file=${name}.cfg
 
 if [ -f "${config_file}" ]; then
 	. ./${config_file}   # read user, host and port
@@ -13,31 +14,29 @@ else
 	exit 2
 fi
 
-if [ -z "$user" -o -z "$host" -o -z "$port" ]; then
+if [ -z "${user}" -o -z "${host}" -o -z "${port}" ]; then
 	echo "user, host, and port variables are needed"
 	exit 2
 fi
 
-name=$(basename $0)
-
 ctrl_path="ctrl-socks-socket"
+ssh_options="ExitOnForwardFailure=yes"
 
 stop() {
 	echo -n "Stopping ${name}... "
-	ssh -S ${ctrl_path} -O exit $user@$host > /dev/null 2>&1
+	ssh -S ${ctrl_path} -O exit ${user}@${host} > /dev/null 2>&1
 	echo "OK"
 }
 
 start() {
-	output=$(ssh -S ${ctrl_path} -O check $user@$host 2>&1)
+	output=$(ssh -S ${ctrl_path} -O check ${user}@${host} 2>&1)
 	rc=$?  # 255 when socket doest not exist, 0 otherwise
 	if [ $rc -eq 0 ]; then
 		echo ${output}
 		exit 3
 	fi
 	echo -n "Starting ${name}... "
-	options="ExitOnForwardFailure=yes"
-	ssh -o ${options} -MS ${ctrl_path} -nfNTD $port $user@$host
+	ssh -o ${ssh_options} -MS ${ctrl_path} -nfNTD ${port} ${user}@${host}
 	if [ $? -ne 0 ]; then
 		echo "ERROR"
 		exit 4
@@ -47,7 +46,7 @@ start() {
 }
 
 check() {
-	if nc -zw30 localhost $port &> /dev/null ; then
+	if nc -zw30 localhost ${port} &> /dev/null ; then
 		if [ ! -z "$1" ]; then
 			# Handle /etc/hosts
 			ip=$(getent hosts ${host} | cut -d " " -f1)
