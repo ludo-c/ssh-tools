@@ -19,7 +19,7 @@ if [ -z "${user}" -o -z "${host}" -o -z "${port}" ]; then
 	exit 2
 fi
 
-ctrl_path="ctrl-socks-socket"
+ctrl_path="/tmp/ctrl-socks-socket"
 ssh_options="ExitOnForwardFailure=yes"
 
 stop() {
