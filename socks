@@ -3,6 +3,14 @@
 # Uses socks.cfg file with "user", "host", and "port" variables
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
 
+# returns: 0 ok (connected with 'check')
+#          1 bad parameter
+#          2 proxy disconnected (with 'check')
+#          3 configuration file error
+#          4 already running
+#          5 error on start
+#          6 error on stop
+
 name=$(basename $0)
 config_file=${name}.cfg
 
@@ -11,12 +19,12 @@ if [ -f "${config_file}" ]; then
 else
 	echo -e "user=\nhost=\nport=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
-	exit 2
+	exit 3
 fi
 
 if [ -z "${user}" -o -z "${host}" -o -z "${port}" ]; then
 	echo "user, host, and port variables are needed"
-	exit 2
+	exit 3
 fi
 
 ctrl_path="/tmp/ctrl-socks-socket"
@@ -29,22 +37,21 @@ stop() {
 		echo "OK"
 	else
 		echo "ERROR. ${output}"
-		exit 5
+		exit 6
 	fi
 }
 
 start() {
 	output=$(ssh -S ${ctrl_path} -O check ${user}@${host} 2>&1)
-	rc=$?  # 255 when socket doest not exist, 0 otherwise
-	if [ $rc -eq 0 ]; then
-		echo ${output}
-		exit 3
+	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
+		echo "Already running. ${output}"
+		exit 4
 	fi
 	echo -n "Starting ${name}... "
-	ssh -o ${ssh_options} -MS ${ctrl_path} -nfNTD ${port} ${user}@${host}
+	output=$(ssh -o ${ssh_options} -MS ${ctrl_path} -nfNTD ${port} ${user}@${host} 2>&1)
 	if [ $? -ne 0 ]; then
-		echo "ERROR"
-		exit 4
+		echo "ERROR. ${output}"
+		exit 5
 	else
 		echo "OK"
 	fi
@@ -59,12 +66,12 @@ check() {
 			latency=$(proxychains nmap -sP ${ip} | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
 			echo $latency
 		else
-			echo "actif"
+			echo "active"
 		fi
 		return 0
 	else
-		echo "inactif"
-		return 1
+		echo "inactive"
+		return 2
 	fi
 }
 
