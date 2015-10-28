@@ -12,10 +12,10 @@
 #          6 error on stop
 
 name=$(basename $0)
-config_file=${name}.cfg
+config_file=${HOME}/.config/${name}.cfg
 
 if [ -f "${config_file}" ]; then
-	. ./${config_file}   # read user, host and port
+	. ${config_file}   # read user, host and port
 else
 	echo -e "user=\nhost=\nport=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
