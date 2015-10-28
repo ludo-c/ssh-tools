@@ -29,6 +29,7 @@ fi
 
 ctrl_path="/tmp/ctrl-socks-socket"
 ssh_options="ExitOnForwardFailure=yes"
+log_file="/tmp/${name}.log"
 
 stop() {
 	echo -n "Stopping ${name}... "
@@ -48,9 +49,9 @@ start() {
 		exit 4
 	fi
 	echo -n "Starting ${name}... "
-	output=$(ssh -o ${ssh_options} -MS ${ctrl_path} -nfNTD ${port} ${user}@${host} 2>&1)
+	ssh -o ${ssh_options} -MS ${ctrl_path} -nfNTD ${port} ${user}@${host} > ${log_file} 2>&1
 	if [ $? -ne 0 ]; then
-		echo "ERROR. ${output}"
+		echo "ERROR. See ${log_file}"
 		exit 5
 	else
 		echo "OK"
