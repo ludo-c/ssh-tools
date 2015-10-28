@@ -24,8 +24,13 @@ ssh_options="ExitOnForwardFailure=yes"
 
 stop() {
 	echo -n "Stopping ${name}... "
-	ssh -S ${ctrl_path} -O exit ${user}@${host} > /dev/null 2>&1
-	echo "OK"
+	output=$(ssh -S ${ctrl_path} -O exit ${user}@${host} 2>&1)
+	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
+		echo "OK"
+	else
+		echo "ERROR. ${output}"
+		exit 5
+	fi
 }
 
 start() {
