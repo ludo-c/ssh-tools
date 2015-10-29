@@ -58,7 +58,7 @@ start() {
 	fi
 }
 
-check() {
+status() {
 	output=$(nc -zw30 localhost ${port})
 	if [ $? -eq 0 ]; then
 		if [ ! -z "$1" ]; then
@@ -78,18 +78,25 @@ check() {
 }
 
 case $1 in
-	"start")
-		start ;;
-	"stop")
-		stop  ;;
-	"check")
-		check ; exit $? ;;
-	"latency")
-		check latency ; exit $? ;;
-	"restart")
+	start)
+		start
+		;;
+	stop)
 		stop
-		start  ;;
+		;;
+	status)
+		status
+		exit $?
+		;;
+	latency)
+		status latency
+		exit $?
+		;;
+	restart)
+		stop
+		start
+		;;
 	*)
-		echo "usage: ${name} start|stop|restart|check|latency"
+		echo "Usage: ${name} {start|stop|restart|status|latency}" >&2
 		exit 1
 esac
