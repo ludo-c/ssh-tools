@@ -59,7 +59,8 @@ start() {
 }
 
 check() {
-	if nc -zw30 localhost ${port} &> /dev/null ; then
+	output=$(nc -zw30 localhost ${port})
+	if [ $? -eq 0 ]; then
 		if [ ! -z "$1" ]; then
 			# Handle /etc/hosts
 			ip=$(getent hosts ${host} | cut -d " " -f1)
