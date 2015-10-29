@@ -7,7 +7,7 @@
 
 name=$(basename $0)
 lf=/tmp/${name}.pid
-options="ExitOnForwardFailure=yes"
+ssh_options="ExitOnForwardFailure=yes"
 
 if [ "$#" -ne 3 ]; then
 	echo "Bad parameters"
@@ -35,6 +35,6 @@ echo $$ > ${lf}
 
 while [ true ]; do
 	date
-	ssh -o ${options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+	ssh -o ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
 	sleep 10
 done
