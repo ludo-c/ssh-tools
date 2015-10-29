@@ -38,7 +38,7 @@ stop() {
 		echo "OK"
 	else
 		echo "ERROR. ${output}"
-		exit 6
+		return 6
 	fi
 }
 
@@ -46,13 +46,13 @@ start() {
 	output=$(ssh -S ${ctrl_path} -O check ${user}@${host} 2>&1)
 	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
 		echo "Already running. ${output}"
-		exit 4
+		return 4
 	fi
 	echo -n "Starting ${name}... "
 	ssh -o ${ssh_options} -MS ${ctrl_path} -nfNTD ${port} ${user}@${host} > ${log_file} 2>&1
 	if [ $? -ne 0 ]; then
 		echo "ERROR. See ${log_file}"
-		exit 5
+		return 5
 	else
 		echo "OK"
 	fi
@@ -80,9 +80,11 @@ status() {
 case $1 in
 	start)
 		start
+		exit $?
 		;;
 	stop)
 		stop
+		exit $?
 		;;
 	status)
 		status
@@ -93,8 +95,9 @@ case $1 in
 		exit $?
 		;;
 	restart)
-		stop
+		stop  # don't care if it fails
 		start
+		exit $?
 		;;
 	*)
 		echo "Usage: ${name} {start|stop|restart|status|latency}" >&2
