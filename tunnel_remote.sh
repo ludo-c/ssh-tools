@@ -32,8 +32,12 @@ touch ${lf}
 read lastPID < ${lf}
 # if lastPID is not null and a process with that pid exists, exit
 if [ ! -z "${lastPID}" -a -d /proc/${lastPID} ]; then
-	echo "${name} already running"
-	exit 1
+	# check that the process is not a recycled one
+	grep ${name} /proc/${lastPID}/cmdline > /dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		echo "${name} already running"
+		exit 1
+	fi
 fi
 
 # save my pid in the lock file
