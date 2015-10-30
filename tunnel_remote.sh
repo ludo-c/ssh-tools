@@ -1,13 +1,19 @@
 #!/bin/sh
 # Create a ssh remote port forwarding
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
+#
+# If you have trouble reconnecting to the server with :
+# "Error: remote port forwarding failed for listen port xxxx"
+# add "ClientAliveInterval 60" in your sshd configuration (server side)
+# see: http://unix.stackexchange.com/questions/3026/what-do-the-options-serveraliveinterval-and-clientaliveinterval-in-sshd-conf
+
 # Returns : 0 ok
 #           1 process is already running
 #           2 bad parameters
 
 name=$(basename $0)
 lf=/tmp/${name}.pid
-ssh_options="ExitOnForwardFailure=yes"
+ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
 
 if [ "$#" -ne 3 ]; then
 	echo "Bad parameters"
@@ -35,6 +41,6 @@ echo $$ > ${lf}
 
 while [ true ]; do
 	date
-	ssh -o ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+	ssh ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
 	sleep 10
 done
