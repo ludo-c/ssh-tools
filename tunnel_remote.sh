@@ -45,6 +45,6 @@ echo $$ > ${lf}
 
 while [ true ]; do
 	date
-	ssh ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+	eval ssh ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
 	sleep 10
 done
