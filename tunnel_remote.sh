@@ -43,8 +43,5 @@ fi
 # save my pid in the lock file
 echo $$ > ${lf}
 
-while [ true ]; do
-	date
-	eval ssh ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
-	sleep 10
-done
+# In many ways ServerAliveInterval may be a better solution than the monitoring port.
+eval autossh -M0 ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
