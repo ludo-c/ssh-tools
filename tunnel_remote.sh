@@ -10,8 +10,24 @@
 # Returns : 0 ok
 #           1 process is already running
 #           2 bad parameters
+#           3 configuration file error
 
 name=$(basename $0)
+
+config_file=${HOME}/.config/${name}.cfg
+if [ -f "${config_file}" ]; then
+	. ${config_file}   # read remote_port, local_port and dest_host
+else
+	echo -e "remote_port=\nlocal_port=\ndest_host=\n" > ${config_file}
+	echo "config file ${config_file} created, please fill it"
+	exit 3
+fi
+
+if [ -z "${remote_port}" -o -z "${local_port}" -o -z "${dest_host}" ]; then
+	echo "remote_port, local_port, and dest_host variables are needed"
+	exit 3
+fi
+
 lf=/tmp/${name}.pid
 ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
 
@@ -21,10 +37,6 @@ if [ "$#" -ne 3 ]; then
 	echo "eg : ${name} 2222 22 bob@host"
 	exit 2
 fi
-
-remote_port=$1
-local_port=$2
-dest_host=$3
 
 # http://stackoverflow.com/questions/1440967/how-do-i-make-sure-my-bash-script-isnt-already-running
 # create empty lock file if none exists
