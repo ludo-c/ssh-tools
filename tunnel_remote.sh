@@ -8,8 +8,8 @@
 # see: http://unix.stackexchange.com/questions/3026/what-do-the-options-serveraliveinterval-and-clientaliveinterval-in-sshd-conf
 
 # Returns : 0 ok
-#           1 process is already running
-#           2 bad parameters
+#           1 bad parameters
+#           2 process is already running (except for 'status')
 #           3 configuration file error
 
 name=$(basename $0)
@@ -31,29 +31,81 @@ fi
 lf=/tmp/${name}.pid
 ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
 
-if [ "$#" -ne 3 ]; then
-	echo "Bad parameters"
-	echo "Usage : ${name} <remote_port> <local_port> <dest_host>"
-	echo "eg : ${name} 2222 22 bob@host"
-	exit 2
-fi
-
-# http://stackoverflow.com/questions/1440967/how-do-i-make-sure-my-bash-script-isnt-already-running
-# create empty lock file if none exists
-touch ${lf}
-read lastPID < ${lf}
-# if lastPID is not null and a process with that pid exists, exit
-if [ ! -z "${lastPID}" -a -d /proc/${lastPID} ]; then
-	# check that the process is not a recycled one
-	grep ${name} /proc/${lastPID}/cmdline > /dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		echo "${name} already running"
-		exit 1
+# return 2 if running, 0 otherwise
+status() {
+	# http://stackoverflow.com/questions/1440967/how-do-i-make-sure-my-bash-script-isnt-already-running
+	# create empty lock file if none exists
+	touch ${lf}
+	read lastPID < ${lf}
+	# if lastPID is not null and a process with that pid exists, exit
+	if [ ! -z "${lastPID}" -a -d /proc/${lastPID} ]; then
+		# check that the process is not a recycled one (at least, it's autossh)
+		eval grep autossh /proc/${lastPID}/cmdline > /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			return 2
+		fi
 	fi
-fi
+}
 
-# save my pid in the lock file
-echo $$ > ${lf}
+send_signal() {
+	status
+	rc=$?
+	if [ ${rc} -ne 0 ]; then
+		read lastPID < ${lf}
+		case $1 in
+			stop)
+				# SIGTERM
+				signal="15"
+				;;
+			restart)
+				# SIGUSR1
+				signal="10"
+				;;
+			*)
+				# impossible case
+				return 1
+				;;
 
-# In many ways ServerAliveInterval may be a better solution than the monitoring port.
-eval autossh -M0 ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+		esac
+		eval kill -${signal} ${lastPID}
+	else
+		echo "${name} is not running"
+		return 4
+	fi
+}
+
+start() {
+	status
+	rc=$?
+	if [ ${rc} -ne 0 ]; then
+		echo "Already running"
+		return 2
+	else
+		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
+		eval AUTOSSH_PIDFILE=${lf} autossh -f -M0 ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+	fi
+}
+
+case $1 in
+	start)
+		start
+		exit $?
+		;;
+	stop|restart)
+		send_signal $1
+		exit $?
+		;;
+	status)
+		status
+		rc=$?
+		if [ "${rc}" -eq 0 ]; then
+			echo "inactive"
+		else
+			echo "active"
+		fi
+		;;
+	*)
+		echo "Usage: ${name} {start|stop|restart|status}" >&2
+		exit 1
+		;;
+esac
