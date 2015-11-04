@@ -75,14 +75,16 @@ send_signal() {
 }
 
 start() {
+	echo -n "Starting... "
 	status
 	rc=$?
 	if [ ${rc} -ne 0 ]; then
-		echo "Already running"
+		echo "Failed. Already running"
 		return 2
 	else
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		eval AUTOSSH_PIDFILE=${lf} autossh -f -M0 ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+		echo "OK"
 	fi
 }
 
