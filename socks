@@ -51,7 +51,8 @@ start() {
 	echo -n "Starting ${name}... "
 	eval ssh -o ${ssh_options} -MS ${ctrl_path} -nfNTD ${port} ${user}@${host} > ${log_file} 2>&1
 	if [ $? -ne 0 ]; then
-		echo "ERROR. See ${log_file}"
+		echo "ERROR. See ${log_file}. Here's a tail:"
+		tail ${log_file}
 		return 5
 	else
 		echo "OK"
