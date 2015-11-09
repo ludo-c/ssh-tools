@@ -94,7 +94,11 @@ start() {
 	else
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		eval AUTOSSH_PIDFILE=${lf} autossh -f -M0 ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
-		echo "OK"
+		if [ $? -eq 0 ]; then
+			echo "OK"
+		else
+			echo "ERROR"
+		fi
 	fi
 }
 
