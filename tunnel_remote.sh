@@ -13,8 +13,9 @@
 #           3 configuration file error
 
 name=$(basename $0)
-
 config_file=${HOME}/.config/${name}.cfg
+
+[ ! -d "$(dirname ${config_file})" ] && mkdir -p "$(dirname ${config_file})"
 if [ -f "${config_file}" ]; then
 	. ${config_file}   # read remote_port, local_port and dest_host
 else
