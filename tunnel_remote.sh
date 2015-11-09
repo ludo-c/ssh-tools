@@ -18,7 +18,16 @@ config_file=${HOME}/.config/${name}.cfg
 if [ -f "${config_file}" ]; then
 	. ${config_file}   # read remote_port, local_port and dest_host
 else
-	echo -e "remote_port=\nlocal_port=\ndest_host=\n" > ${config_file}
+	# Does shell need '-e' to interpret backslash escapes
+	output=$(echo "test\necho" | wc -l)
+	rc=$?
+	echo_options=""
+	if [ "${rc}" -eq 0 ] && [ "${output}" -ne 1 ]; then
+		echo_options=""
+	else
+		echo_options="-e"
+	fi
+	echo ${echo_options} "remote_port=\nlocal_port=\ndest_host=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
 	exit 3
 fi
