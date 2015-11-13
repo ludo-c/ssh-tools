@@ -46,11 +46,11 @@ status() {
 	# http://stackoverflow.com/questions/1440967/how-do-i-make-sure-my-bash-script-isnt-already-running
 	# create empty lock file if none exists
 	touch ${lf}
-	read lastPID < ${lf}
-	# if lastPID is not null and a process with that pid exists, exit
-	if [ ! -z "${lastPID}" -a -d /proc/${lastPID} ]; then
+	read last_pid < ${lf}
+	# if last_pid is not null and a process with that pid exists, exit
+	if [ ! -z "${last_pid}" -a -d /proc/${last_pid} ]; then
 		# check that the process is not a recycled one (at least, it's autossh)
-		eval grep autossh /proc/${lastPID}/cmdline > /dev/null 2>&1
+		eval grep autossh /proc/${last_pid}/cmdline > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			return 2
 		fi
@@ -59,25 +59,24 @@ status() {
 
 send_signal() {
 	status
-	rc=$?
-	if [ ${rc} -ne 0 ]; then
-		read lastPID < ${lf}
+	if [ $? -ne 0 ]; then
+		read last_pid < ${lf}
 		case $1 in
-			stop)
-				# SIGTERM
-				signal="15"
-				;;
-			restart)
-				# SIGUSR1
-				signal="10"
-				;;
-			*)
-				# impossible case
-				return 1
-				;;
+		stop)
+			# SIGTERM
+			signal="15"
+			;;
+		restart)
+			# SIGUSR1
+			signal="10"
+			;;
+		*)
+			# impossible case
+			return 1
+			;;
 
 		esac
-		eval kill -${signal} ${lastPID}
+		eval kill -${signal} ${last_pid}
 	else
 		echo "${name} is not running"
 		return 4
@@ -87,8 +86,7 @@ send_signal() {
 start() {
 	echo -n "Starting... "
 	status
-	rc=$?
-	if [ ${rc} -ne 0 ]; then
+	if [ $? -ne 0 ]; then
 		echo "Failed. Already running"
 		return 2
 	else
@@ -103,25 +101,24 @@ start() {
 }
 
 case $1 in
-	start)
-		start
-		exit $?
-		;;
-	stop|restart)
-		send_signal $1
-		exit $?
-		;;
-	status)
-		status
-		rc=$?
-		if [ "${rc}" -eq 0 ]; then
-			echo "inactive"
-		else
-			echo "active"
-		fi
-		;;
-	*)
-		echo "Usage: ${name} {start|stop|restart|status}" >&2
-		exit 1
-		;;
+start)
+	start
+	exit $?
+	;;
+stop|restart)
+	send_signal $1
+	exit $?
+	;;
+status)
+	status
+	if [ $? -eq 0 ]; then
+		echo "inactive"
+	else
+		echo "active"
+	fi
+	;;
+*)
+	echo "Usage: ${name} {start|stop|restart|status}" >&2
+	exit 1
+	;;
 esac
