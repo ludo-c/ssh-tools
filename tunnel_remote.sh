@@ -44,9 +44,10 @@ ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
 # return 2 if running, 0 otherwise
 status() {
 	# http://stackoverflow.com/questions/1440967/how-do-i-make-sure-my-bash-script-isnt-already-running
-	# create empty lock file if none exists
-	touch ${lf}
-	read last_pid < ${lf}
+	last_pid=""
+	if [ -f ${lf} ]; then
+		read last_pid < ${lf}
+	fi
 	# if last_pid is not null and a process with that pid exists, exit
 	if [ ! -z "${last_pid}" -a -d /proc/${last_pid} ]; then
 		# check that the process is not a recycled one (at least, it's autossh)
@@ -64,19 +65,24 @@ send_signal() {
 		case $1 in
 		stop)
 			# SIGTERM
-			signal="15"
+			kill -15 ${last_pid}
+			sleep 1
+			status
+			if [ $? -ne 0 ]; then
+				# SIGKILL
+				kill -9 ${last_pid}
+				rm ${lf}
+			fi
 			;;
 		restart)
 			# SIGUSR1
-			signal="10"
+			kill -10 ${last_pid}
 			;;
 		*)
 			# impossible case
 			return 1
 			;;
-
 		esac
-		eval kill -${signal} ${last_pid}
 	else
 		echo "${name} is not running"
 		return 4
