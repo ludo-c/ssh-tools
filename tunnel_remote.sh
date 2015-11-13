@@ -40,6 +40,8 @@ fi
 
 lf=/tmp/${name}.pid
 ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
+ssh_log_file="/tmp/${name}-ssh.log"
+autossh_log_file="/tmp/${name}-autossh.log"
 
 # return 2 if running, 0 otherwise
 status() {
@@ -97,10 +99,11 @@ start() {
 		return 2
 	else
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
-		eval AUTOSSH_PIDFILE=${lf} autossh -f -M0 ${ssh_options} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+		eval AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} -E ${ssh_log_file} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
+			# in case autossh is not installed. In all others cases autossh will return OK
 			echo "ERROR"
 		fi
 	fi
