@@ -99,7 +99,8 @@ start() {
 		return 2
 	else
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
-		eval AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} -E ${ssh_log_file} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
+		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} -E ${ssh_log_file} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
