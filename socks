@@ -59,7 +59,8 @@ start() {
 		return 4
 	fi
 	echo -n "Starting ${name}... "
-	eval ssh -o ${ssh_options} -MS ${ctrl_path} -nfNTD ${port} ${user}@${host} > ${log_file} 2>&1
+	date >> ${log_file}
+	eval ssh -o ${ssh_options} -MS ${ctrl_path} -E ${log_file} -nfNTD ${port} ${user}@${host}
 	if [ $? -ne 0 ]; then
 		echo "ERROR. See ${log_file}. Here's a tail:"
 		tail ${log_file}
