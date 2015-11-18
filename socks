@@ -3,9 +3,9 @@
 # Uses socks.cfg file with "user", "host", and "port" variables
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
 
-# returns: 0 ok (connected with 'check')
+# returns: 0 ok (connected with 'status')
 #          1 bad parameter
-#          2 proxy disconnected (with 'check')
+#          2 proxy disconnected
 #          3 configuration file error
 #          4 already running
 #          5 error on start
@@ -42,20 +42,25 @@ ssh_options="ExitOnForwardFailure=yes"
 log_file="/tmp/${name}.log"
 
 stop() {
-	echo -n "Stopping ${name}... "
-	output=$(ssh -S ${ctrl_path} -O exit ${user}@${host} 2>&1)
-	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
-		echo "OK"
+	status
+	if [ $? -eq 0 ]; then
+		echo -n "Stopping ${name}... "
+		output=$(ssh -S ${ctrl_path} -O exit ${user}@${host} 2>&1)
+		if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
+			echo "OK"
+		else
+			echo "ERROR. ${output}"
+			return 6
+		fi
 	else
-		echo "ERROR. ${output}"
-		return 6
+		echo "Not running"
 	fi
 }
 
 start() {
-	output=$(ssh -S ${ctrl_path} -O check ${user}@${host} 2>&1)
-	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
-		echo "Already running. ${output}"
+	status
+	if [ $? -eq 0 ]; then
+		echo "Already running"
 		return 4
 	fi
 	echo -n "Starting ${name}... "
@@ -71,18 +76,16 @@ start() {
 }
 
 status() {
-	output=$(nc -zw30 localhost ${port})
-	if [ $? -eq 0 ]; then
+	#output=$(nc -zw30 localhost ${port})
+	output=$(ssh -S ${ctrl_path} -O check ${user}@${host} 2>&1)
+	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
 		if [ ! -z "$1" ]; then
 			# Needs proxychains4 (proxychains-ng)
 			latency=$(proxychains4 nmap -sP ${host} 2> /dev/null | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
 			echo $latency
-		else
-			echo "active"
 		fi
 		return 0
 	else
-		echo "inactive"
 		return 2
 	fi
 }
@@ -98,7 +101,13 @@ case $1 in
 		;;
 	status)
 		status
-		exit $?
+		rc=$?
+		if [ ${rc} -eq 0 ]; then
+			echo "active"
+		else
+			echo "inactive"
+		fi
+		exit ${rc}
 		;;
 	latency)
 		status latency
