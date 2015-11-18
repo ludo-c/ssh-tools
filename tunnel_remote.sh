@@ -9,7 +9,7 @@
 
 # Returns : 0 ok
 #           1 bad parameters
-#           2 process is already running (except for 'status')
+#           2 process is already running
 #           3 configuration file error
 
 name=$(basename $0)
@@ -43,10 +43,11 @@ ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
 ssh_log_file="/tmp/${name}-ssh.log"
 autossh_log_file="/tmp/${name}-autossh.log"
 
-# return 2 if running, 0 otherwise
+# return 0 if running, 2 otherwise
 status() {
 	# http://stackoverflow.com/questions/1440967/how-do-i-make-sure-my-bash-script-isnt-already-running
 	last_pid=""
+	rc=2
 	if [ -f ${lf} ]; then
 		read last_pid < ${lf}
 	fi
@@ -55,14 +56,19 @@ status() {
 		# check that the process is not a recycled one (at least, it's autossh)
 		eval grep autossh /proc/${last_pid}/cmdline > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
-			return 2
+			rc=0
+			if [ ! -z "$1" ]; then
+				latency=$(nmap -sP ${dest_host} | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
+				echo ${latency}
+			fi
 		fi
 	fi
+	return ${rc}
 }
 
 send_signal() {
 	status
-	if [ $? -ne 0 ]; then
+	if [ $? -eq 0 ]; then
 		read last_pid < ${lf}
 		case $1 in
 		stop)
@@ -70,7 +76,7 @@ send_signal() {
 			kill -15 ${last_pid}
 			sleep 1
 			status
-			if [ $? -ne 0 ]; then
+			if [ $? -eq 0 ]; then
 				# SIGKILL
 				kill -9 ${last_pid}
 				rm ${lf}
@@ -94,7 +100,7 @@ send_signal() {
 start() {
 	echo -n "Starting... "
 	status
-	if [ $? -ne 0 ]; then
+	if [ $? -eq 0 ]; then
 		echo "Failed. Already running"
 		return 2
 	else
@@ -121,14 +127,20 @@ stop|restart)
 	;;
 status)
 	status
-	if [ $? -eq 0 ]; then
-		echo "inactive"
-	else
+	rc=$?
+	if [ ${rc} -eq 0 ]; then
 		echo "active"
+	else
+		echo "inactive"
 	fi
+	exit ${rc}
+	;;
+latency)
+	status latency
+	exit $?
 	;;
 *)
-	echo "Usage: ${name} {start|stop|restart|status}" >&2
+	echo "Usage: ${name} {start|stop|restart|status|latency}" >&2
 	exit 1
 	;;
 esac
