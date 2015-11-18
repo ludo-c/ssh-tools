@@ -74,10 +74,8 @@ status() {
 	output=$(nc -zw30 localhost ${port})
 	if [ $? -eq 0 ]; then
 		if [ ! -z "$1" ]; then
-			# Handle /etc/hosts
-			ip=$(getent hosts ${host} | cut -d " " -f1)
-			# Needs proxychains
-			latency=$(proxychains nmap -sP ${ip} | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
+			# Needs proxychains4 (proxychains-ng)
+			latency=$(proxychains4 nmap -sP ${host} 2> /dev/null | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
 			echo $latency
 		else
 			echo "active"
