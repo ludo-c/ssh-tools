@@ -37,7 +37,7 @@ if [ -z "${user}" -o -z "${host}" -o -z "${port}" ]; then
 	exit 3
 fi
 
-ctrl_path="/tmp/ctrl-${name}-socket"
+ctrl_path="${HOME}/.ssh/${name}-${user}@${host}:${port}"
 ssh_options="ExitOnForwardFailure=yes"
 log_file="/tmp/${name}.log"
 
