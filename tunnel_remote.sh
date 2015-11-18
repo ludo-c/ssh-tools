@@ -17,7 +17,7 @@ config_file=${HOME}/.config/${name}.cfg
 
 [ ! -d "$(dirname ${config_file})" ] && mkdir -p "$(dirname ${config_file})"
 if [ -f "${config_file}" ]; then
-	. ${config_file}   # read remote_port, local_port and dest_host
+	. ${config_file}   # read remote_port, local_port, user and dest_host
 else
 	# Does shell need '-e' to interpret backslash escapes
 	output=$(echo "test\necho" | wc -l)
@@ -28,13 +28,13 @@ else
 	else
 		echo_options="-e"
 	fi
-	echo ${echo_options} "remote_port=\nlocal_port=\ndest_host=\n" > ${config_file}
+	echo ${echo_options} "remote_port=\nlocal_port=\nuser=\ndest_host=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
 	exit 3
 fi
 
-if [ -z "${remote_port}" -o -z "${local_port}" -o -z "${dest_host}" ]; then
-	echo "remote_port, local_port, and dest_host variables are needed"
+if [ -z "${remote_port}" -o -z "${local_port}" -o -z "${dest_host}" -o -z "${user}" ]; then
+	echo "remote_port, local_port, user, and dest_host variables are needed"
 	exit 3
 fi
 
@@ -100,7 +100,7 @@ start() {
 	else
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
-		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} -E ${ssh_log_file} -nTNR ${remote_port}:localhost:${local_port} ${dest_host}
+		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} -E ${ssh_log_file} -nTNR ${remote_port}:localhost:${local_port} ${user}@${dest_host}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
