@@ -91,34 +91,34 @@ status() {
 }
 
 case $1 in
-	start)
-		start
-		exit $?
-		;;
-	stop)
-		stop
-		exit $?
-		;;
-	status)
-		status
-		rc=$?
-		if [ ${rc} -eq 0 ]; then
-			echo "active"
-		else
-			echo "inactive"
-		fi
-		exit ${rc}
-		;;
-	latency)
-		status latency
-		exit $?
-		;;
-	restart)
-		stop  # don't care if it fails
-		start
-		exit $?
-		;;
-	*)
-		echo "Usage: ${name} {start|stop|restart|status|latency}" >&2
-		exit 1
+start)
+	start
+	exit $?
+	;;
+stop)
+	stop
+	exit $?
+	;;
+status)
+	status
+	rc=$?
+	if [ ${rc} -eq 0 ]; then
+		echo "active"
+	else
+		echo "inactive"
+	fi
+	exit ${rc}
+	;;
+latency)
+	status latency
+	exit $?
+	;;
+restart)
+	stop  # don't care if it fails
+	start
+	exit $?
+	;;
+*)
+	echo "Usage: ${name} {start|stop|restart|status|latency}" >&2
+	exit 1
 esac
