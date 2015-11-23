@@ -28,7 +28,7 @@ else
 	else
 		echo_options="-e"
 	fi
-	echo ${echo_options} "remote_port=\nlocal_port=\nuser=\ndest_host=\n# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)\npriv_key=\n" > ${confeg_file}
+	echo ${echo_options} "remote_port=\nlocal_port=\nuser=\ndest_host=\n# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)\npriv_key=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
 	exit 3
 fi
