@@ -80,7 +80,6 @@ start() {
 }
 
 status() {
-	#output=$(nc -zw30 localhost ${port})
 	output=$(ssh -S ${ctrl_path} -O check ${user}@${host} 2>&1)
 	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
 		if [ ! -z "$1" ]; then
@@ -122,7 +121,11 @@ restart)
 	start
 	exit $?
 	;;
+test)
+	nc -zw3 localhost ${port}
+	exit $?
+	;;
 *)
-	echo "Usage: ${name} {start|stop|restart|status|latency}" >&2
+	echo "Usage: ${name} {start|stop|restart|status|latency|test}" >&2
 	exit 1
 esac
