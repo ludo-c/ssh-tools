@@ -27,7 +27,7 @@ else
 	else
 		echo_options="-e"
 	fi
-	echo ${echo_options} "user=\nhost=\nport=\n" > ${config_file}
+	echo ${echo_options} "user=\nhost=\nport=\n# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)\npriv_key=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
 	exit 3
 fi
@@ -40,6 +40,10 @@ fi
 ctrl_path="${HOME}/.ssh/${name}-${user}@${host}:${port}"
 ssh_options="ExitOnForwardFailure=yes"
 log_file="/tmp/${name}.log"
+ssh_priv_key=""
+if [ ! -z ${priv_key} ]; then
+	ssh_priv_key="-i ${HOME}/.ssh/${priv_key}"
+fi
 
 stop() {
 	status
@@ -65,7 +69,7 @@ start() {
 	fi
 	echo -n "Starting ${name}... "
 	date >> ${log_file}
-	eval ssh -o ${ssh_options} -MS ${ctrl_path} -E ${log_file} -nfNTD ${port} ${user}@${host}
+	eval ssh -o ${ssh_options} ${ssh_priv_key} -MS ${ctrl_path} -E ${log_file} -nfNTD ${port} ${user}@${host}
 	if [ $? -ne 0 ]; then
 		echo "ERROR. See ${log_file}. Here's a tail:"
 		tail ${log_file}
