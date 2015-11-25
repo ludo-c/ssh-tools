@@ -11,6 +11,7 @@
 #           1 bad parameters
 #           2 process is already running
 #           3 configuration file error
+#           4 login error
 
 name=$(basename $0)
 config_file=${HOME}/.config/${name}.cfg
@@ -42,6 +43,7 @@ lf=/tmp/${name}.pid
 ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
 ssh_log_file="/tmp/${name}-ssh.log"
 autossh_log_file="/tmp/${name}-autossh.log"
+sshlogin_log_file="/tmp/${name}-sshlogin.log"
 ssh_priv_key=""
 if [ ! -z ${priv_key} ]; then
 	ssh_priv_key="-i ${HOME}/.ssh/${priv_key}"
@@ -108,6 +110,13 @@ start() {
 		echo "Failed. Already running"
 		return 2
 	else
+		test_login
+		if [ $? -ne 0 ]; then
+			echo "Login error:"
+			tail ${sshlogin_log_file}
+			return 4
+		fi
+
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
 		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_priv_key} -E ${ssh_log_file} -nTNR ${remote_port}:localhost:${local_port} ${user}@${dest_host}
@@ -117,6 +126,21 @@ start() {
 			# in case autossh is not installed. In all others cases autossh will return OK
 			echo "ERROR"
 		fi
+	fi
+}
+
+# Return 0 if login OK, 4 otherwise
+test_login() {
+	# ssh return:
+	#   255 if login is impossible
+	#   1 if login is /bin/false
+	#   0 if login OK
+	date >> ${sshlogin_log_file}
+	ssh -q ${ssh_priv_key} -E ${sshlogin_log_file} ${user}@${dest_host} 2>&1 > /dev/null
+	if [ $? -eq 255 ]; then
+		return 4
+	else
+		return 0
 	fi
 }
 
@@ -143,8 +167,12 @@ latency)
 	status latency
 	exit $?
 	;;
+test)
+	test_login
+	exit $?
+	;;
 *)
-	echo "Usage: ${name} {start|stop|restart|status|latency}" >&2
+	echo "Usage: ${name} {start|stop|restart|status|latency|test}" >&2
 	exit 1
 	;;
 esac
