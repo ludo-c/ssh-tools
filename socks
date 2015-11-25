@@ -1,6 +1,6 @@
 #!/bin/sh
 # Create a socks v5 proxy
-# Uses socks.cfg file with "user", "host", and "port" variables
+# Uses socks.conf file with "user", "host", and "port" variables
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
 
 # returns: 0 ok (connected with 'status')
@@ -12,7 +12,7 @@
 #          6 error on stop
 
 name=$(basename $0)
-config_file=${HOME}/.config/${name}.cfg
+config_file=${HOME}/.config/${name}.conf
 
 [ ! -d "$(dirname ${config_file})" ] && mkdir -p "$(dirname ${config_file})"
 if [ -f "${config_file}" ]; then

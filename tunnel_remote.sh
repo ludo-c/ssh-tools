@@ -14,7 +14,7 @@
 #           4 login error
 
 name=$(basename $0)
-config_file=${HOME}/.config/${name}.cfg
+config_file=${HOME}/.config/${name}.conf
 
 [ ! -d "$(dirname ${config_file})" ] && mkdir -p "$(dirname ${config_file})"
 if [ -f "${config_file}" ]; then
