@@ -136,7 +136,7 @@ test_login() {
 	#   1 if login is /bin/false
 	#   0 if login OK
 	date >> ${sshlogin_log_file}
-	ssh -q ${ssh_priv_key} -E ${sshlogin_log_file} ${user}@${dest_host} 2>&1 > /dev/null
+	ssh ${ssh_priv_key} -E ${sshlogin_log_file} ${user}@${dest_host} > /dev/null 2>&1
 	if [ $? -eq 255 ]; then
 		return 4
 	else
