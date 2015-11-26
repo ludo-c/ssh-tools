@@ -1,0 +1,18 @@
+# systemd startup script
+# in directory : /etc/systemd/system
+# systemctl enable tunnel_remote.service
+
+[Unit]
+Description=Create a remote tunnel at startup
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/su ludo -c "/home/ludo/bin/tunnel_remote.sh start"
+ExecStop=/usr/bin/su ludo -c "/home/ludo/bin/tunnel_remote.sh stop"
+Type=forking
+PIDFile=/tmp/tunnel_remote.sh.pid
+Environment="HOME=/home/ludo/"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
