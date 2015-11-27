@@ -7,8 +7,11 @@ bin_dir="${HOME}/bin"
 
 for script in *; do
 	# link only files that are not already linked
-	# and do not create link for this script
-	if [ ! -f ${bin_dir}/${script} -a "${script}" != "${name}" ]; then
+	# only executable files
+	# do not create link for this script
+	if [ ! -f ${bin_dir}/${script} ] && \
+	   [ -x ${script} ] && \
+	   [ "${script}" != "${name}" ]; then
 		ln -s ${PWD}/${script} ${bin_dir}
 		echo "link created for ${script}"
 	fi
