@@ -7,8 +7,8 @@ Description=Create a remote tunnel at startup
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/su ludo -c "/home/ludo/bin/tunnel_remote.sh start"
-ExecStop=/usr/bin/su ludo -c "/home/ludo/bin/tunnel_remote.sh stop"
+ExecStart=/bin/su ludo -c "/home/ludo/bin/tunnel_remote.sh start"
+ExecStop=/bin/su ludo -c "/home/ludo/bin/tunnel_remote.sh stop"
 Type=forking
 PIDFile=/tmp/tunnel_remote.sh.pid
 Environment="HOME=/home/ludo/"
