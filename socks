@@ -40,6 +40,7 @@ fi
 ctrl_path="${HOME}/.ssh/${name}-${user}@${host}:${port}"
 ssh_options="ExitOnForwardFailure=yes"
 log_file="/tmp/${name}.log"
+status_log_file="/tmp/${name}-status.log"
 ssh_priv_key=""
 if [ ! -z ${priv_key} ]; then
 	ssh_priv_key="-i ${HOME}/.ssh/${priv_key}"
@@ -80,7 +81,7 @@ start() {
 }
 
 status() {
-	output=$(ssh -S ${ctrl_path} -O check ${user}@${host} 2>&1)
+	output=$(ssh -S ${ctrl_path} -E ${status_log_file} -O check ${user}@${host} 2>&1)
 	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
 		if [ ! -z "$1" ]; then
 			# Needs proxychains4 (proxychains-ng)
