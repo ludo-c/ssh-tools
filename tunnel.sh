@@ -2,7 +2,7 @@
 # Create a ssh remote or local port forwarding
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
 #
-# Format is ${remote_port}:localhost:${local_port} ${user}@${dest_host}
+# Format is ${port}:localhost:${hostport} ${login_name}@${hostname}
 #
 # If you have trouble reconnecting to the server with :
 # "Error: remote port forwarding failed for listen port xxxx"
@@ -20,7 +20,7 @@ config_file=${HOME}/.config/${name}.conf
 
 [ ! -d "$(dirname ${config_file})" ] && mkdir -p "$(dirname ${config_file})"
 if [ -f "${config_file}" ]; then
-	. ${config_file}   # read remote_port, local_port, user and dest_host
+	. ${config_file}   # read port, hostport, login_name, hostname, type and identity_file
 else
 	# Does shell need '-e' to interpret backslash escapes
 	output=$(echo "test\necho" | wc -l)
@@ -31,13 +31,13 @@ else
 	else
 		echo_options="-e"
 	fi
-	echo ${echo_options} "remote_port=\nlocal_port=\nuser=\ndest_host=\n# Type can be 'remote' or 'local'\ntype=\n# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)\npriv_key=\n" > ${config_file}
+	echo ${echo_options} "port=\nhostport=\nlogin_name=\nhostname=\n# Type can be 'remote' or 'local'\ntype=\n# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)\nidentity_file=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
 	exit 3
 fi
 
-if [ -z "${remote_port}" -o -z "${local_port}" -o -z "${dest_host}" -o -z "${user}" -o -z "${type}" ]; then
-	echo "remote_port, local_port, user, type and dest_host variables are needed"
+if [ -z "${port}" -o -z "${hostport}" -o -z "${hostname}" -o -z "${login_name}" -o -z "${type}" ]; then
+	echo "port, hostport, login_name, type and hostname variables are needed"
 	exit 3
 fi
 
@@ -55,9 +55,9 @@ ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
 ssh_log_file="/tmp/${name}-ssh.log"
 autossh_log_file="/tmp/${name}-autossh.log"
 sshlogin_log_file="/tmp/${name}-sshlogin.log"
-ssh_priv_key=""
-if [ ! -z ${priv_key} ]; then
-	ssh_priv_key="-i ${HOME}/.ssh/${priv_key}"
+ssh_identity_file=""
+if [ ! -z ${identity_file} ]; then
+	ssh_identity_file="-i ${HOME}/.ssh/${identity_file}"
 fi
 
 # return 0 if running, 2 otherwise
@@ -75,7 +75,7 @@ status() {
 		if [ $? -eq 0 ]; then
 			rc=0
 			if [ ! -z "$1" ]; then
-				latency=$(nmap -sP ${dest_host} | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
+				latency=$(nmap -sP ${hostname} | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
 				echo ${latency}
 			fi
 		fi
@@ -130,7 +130,7 @@ start() {
 
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
-		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_priv_key} -E ${ssh_log_file} -nTN ${tunnel_type} ${remote_port}:localhost:${local_port} ${user}@${dest_host}
+		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} -nTN ${tunnel_type} ${port}:localhost:${hostport} ${login_name}@${hostname}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
@@ -147,7 +147,7 @@ test_login() {
 	#   1 if login is /bin/false
 	#   0 if login OK
 	date >> ${sshlogin_log_file}
-	eval ssh ${ssh_priv_key} -no ConnectTimeout=5 -E ${sshlogin_log_file} ${user}@${dest_host} exit > /dev/null 2>&1
+	eval ssh ${ssh_identity_file} -no ConnectTimeout=5 -E ${sshlogin_log_file} ${login_name}@${hostname} exit > /dev/null 2>&1
 	if [ $? -eq 255 ]; then
 		return 4
 	else
