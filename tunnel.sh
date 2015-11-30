@@ -147,7 +147,7 @@ test_login() {
 	#   1 if login is /bin/false
 	#   0 if login OK
 	date >> ${sshlogin_log_file}
-	eval ssh ${ssh_priv_key} -o ConnectTimeout=5 -E ${sshlogin_log_file} ${user}@${dest_host} > /dev/null 2>&1
+	eval ssh ${ssh_priv_key} -no ConnectTimeout=5 -E ${sshlogin_log_file} ${user}@${dest_host} exit > /dev/null 2>&1
 	if [ $? -eq 255 ]; then
 		return 4
 	else
