@@ -1,6 +1,8 @@
 #!/bin/sh
-# Create a ssh remote port forwarding
+# Create a ssh remote or local port forwarding
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
+#
+# Format is ${remote_port}:localhost:${local_port} ${user}@${dest_host}
 #
 # If you have trouble reconnecting to the server with :
 # "Error: remote port forwarding failed for listen port xxxx"
@@ -29,13 +31,22 @@ else
 	else
 		echo_options="-e"
 	fi
-	echo ${echo_options} "remote_port=\nlocal_port=\nuser=\ndest_host=\n# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)\npriv_key=\n" > ${config_file}
+	echo ${echo_options} "remote_port=\nlocal_port=\nuser=\ndest_host=\n# Type can be 'remote' or 'local'\ntype=\n# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)\npriv_key=\n" > ${config_file}
 	echo "config file ${config_file} created, please fill it"
 	exit 3
 fi
 
-if [ -z "${remote_port}" -o -z "${local_port}" -o -z "${dest_host}" -o -z "${user}" ]; then
-	echo "remote_port, local_port, user, and dest_host variables are needed"
+if [ -z "${remote_port}" -o -z "${local_port}" -o -z "${dest_host}" -o -z "${user}" -o -z "${type}" ]; then
+	echo "remote_port, local_port, user, type and dest_host variables are needed"
+	exit 3
+fi
+
+if [ "${type}" = "remote" ]; then
+	tunnel_type="-R"
+elif [ "${type}" = "local" ]; then
+	tunnel_type="-L"
+else
+	echo "Bad type, must be 'remote' or 'local', found :${type}"
 	exit 3
 fi
 
@@ -119,7 +130,7 @@ start() {
 
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
-		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_priv_key} -E ${ssh_log_file} -nTNR ${remote_port}:localhost:${local_port} ${user}@${dest_host}
+		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_priv_key} -E ${ssh_log_file} -nTN ${tunnel_type} ${remote_port}:localhost:${local_port} ${user}@${dest_host}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
