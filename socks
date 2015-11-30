@@ -37,7 +37,7 @@ if [ -z "${user}" -o -z "${host}" -o -z "${local_port}" -o -z "${ssh_port}" ]; t
 	exit 3
 fi
 
-ctrl_path="${HOME}/.ssh/${name}-${user}@${host}:${local_port}"
+ctl_path="${HOME}/.ssh/${name}-${user}@${host}:${local_port}"
 ssh_options="ExitOnForwardFailure=yes"
 log_file="/tmp/${name}.log"
 status_log_file="/tmp/${name}-status.log"
@@ -50,7 +50,7 @@ stop() {
 	status
 	if [ $? -eq 0 ]; then
 		echo -n "Stopping ${name}... "
-		output=$(ssh -S ${ctrl_path} -O exit ${user}@${host} 2>&1)
+		output=$(ssh -S ${ctl_path} -O exit ${user}@${host} 2>&1)
 		if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
 			echo "OK"
 		else
@@ -70,7 +70,7 @@ start() {
 	fi
 	echo -n "Starting ${name}... "
 	date >> ${log_file}
-	eval ssh -o ${ssh_options} ${ssh_priv_key} -p ${ssh_port} -MS ${ctrl_path} -E ${log_file} -nfNTD ${local_port} ${user}@${host}
+	eval ssh -o ${ssh_options} ${ssh_priv_key} -p ${ssh_port} -MS ${ctl_path} -E ${log_file} -nfNTD ${local_port} ${user}@${host}
 	if [ $? -ne 0 ]; then
 		echo "ERROR. See ${log_file}. Here's a tail:"
 		tail ${log_file}
@@ -81,7 +81,7 @@ start() {
 }
 
 status() {
-	output=$(ssh -S ${ctrl_path} -E ${status_log_file} -O check ${user}@${host} 2>&1)
+	output=$(ssh -S ${ctl_path} -E ${status_log_file} -O check ${user}@${host} 2>&1)
 	if [ $? -eq 0 ]; then  # 255 when socket doest not exist, 0 otherwise
 		if [ ! -z "$1" ]; then
 			# Needs proxychains4 (proxychains-ng)
