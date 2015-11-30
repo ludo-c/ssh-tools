@@ -1,0 +1,19 @@
+# systemd startup script
+# in directory : /etc/systemd/system
+# sudo systemctl daemon-reload
+# sudo systemctl enable tunnel.service
+
+[Unit]
+Description=Create a tunnel at startup
+After=network.target
+
+[Service]
+ExecStart=/bin/su ludo -c "/home/ludo/bin/tunnel.sh start"
+ExecStop=/bin/su ludo -c "/home/ludo/bin/tunnel.sh stop"
+Type=forking
+PIDFile=/tmp/tunnel.sh.pid
+Environment="HOME=/home/ludo/"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
