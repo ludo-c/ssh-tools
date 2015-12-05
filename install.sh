@@ -22,12 +22,15 @@ type systemctl > /dev/null 2> /dev/null
 if [ $? -eq 0 ]; then
 	for script in *.service; do
 		if [ ! -f ${systemd_conf_dir}/${script} ];then
-			ln -s ${PWD}/${script} ${systemd_conf_dir}
+			# in order to "enable" service the file have to be copied, not symlinked
+			cp ${PWD}/${script} ${systemd_conf_dir}
 			if [ $? -eq 0 ]; then
-				echo "link created for ${script}"
-				echo "enable it with : systemctl enable" ${script}
+				echo "${script} copied"
+				echo "enable it with :"
+				echo "sudo systemctl daemon-reload"
+				echo "sudo systemctl enable" ${script}
 			else
-				echo "Error while creating link to ${systemd_conf_dir}. Need to be root"
+				echo "Error while copying to ${systemd_conf_dir}. Need to be root"
 			fi
 		fi
 	done
