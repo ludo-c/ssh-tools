@@ -1,18 +1,16 @@
 # systemd startup script
-# in directory : /etc/systemd/system
-# sudo systemctl daemon-reload
-# sudo systemctl enable socks.service
 
 [Unit]
 Description=Create a socks proxy at startup
-After=network.target
+After=sys-subsystem-net-devices-wlan0.device network.target
 
 [Service]
-ExecStart=/bin/su ludo -c "/home/ludo/bin/socks.sh start"
-ExecStop=/bin/su ludo -c "/home/ludo/bin/socks.sh stop"
+ExecStart=/home/ludo/bin/socks.sh start
+ExecStop=/home/ludo/bin/socks.sh stop
 Type=forking
-Environment="HOME=/home/ludo/"
+Environment="HOME=/home/ludo"
 Restart=always
+RestartSec=30sec
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
