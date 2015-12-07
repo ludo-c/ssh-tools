@@ -29,6 +29,8 @@ type=
 port=
 # For 'remote' and 'local'
 hostport=
+# SSH port (default 22)
+ssh_port=22
 # Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)
 identity_file=
 
@@ -139,7 +141,7 @@ start() {
 
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
-		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} -nTN ${tunnel_cmd} ${login_name}@${hostname}
+		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} -nTN ${tunnel_cmd} -p ${ssh_port} ${login_name}@${hostname}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
