@@ -1,8 +1,6 @@
 #!/bin/sh
-# Create a ssh remote or local port forwarding
+# Create a ssh socks proxy or remote|local port forwarding
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
-#
-# Format is ${port}:localhost:${hostport} ${login_name}@${hostname}
 #
 # If you have trouble reconnecting to the server with :
 # "Error: remote port forwarding failed for listen port xxxx"
@@ -20,33 +18,44 @@ config_file=${HOME}/.config/${name}.conf
 
 [ ! -d "$(dirname ${config_file})" ] && mkdir -p "$(dirname ${config_file})"
 if [ -f "${config_file}" ]; then
-	. ${config_file}   # read port, hostport, login_name, hostname, type and identity_file
+	. ${config_file}   # read all variables
 else
-	# Does shell need '-e' to interpret backslash escapes
-	output=$(echo "test\necho" | wc -l)
-	rc=$?
-	echo_options=""
-	if [ "${rc}" -eq 0 ] && [ "${output}" -ne 1 ]; then
-		echo_options=""
-	else
-		echo_options="-e"
-	fi
-	echo ${echo_options} "port=\nhostport=\nlogin_name=\nhostname=\n# Type can be 'remote' or 'local'\ntype=\n# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)\nidentity_file=\n" > ${config_file}
+	cat > ${config_file} << END
+login_name=
+hostname=
+# Type can be 'remote', 'local' or 'socks'
+type=
+# For 'remote', 'local' and 'socks'
+port=
+# For 'remote' and 'local'
+hostport=
+# Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)
+identity_file=
+
+END
 	echo "config file ${config_file} created, please fill it"
 	exit 3
 fi
 
-if [ -z "${port}" -o -z "${hostport}" -o -z "${hostname}" -o -z "${login_name}" -o -z "${type}" ]; then
-	echo "port, hostport, login_name, type and hostname variables are needed"
+if [ -z "${login_name}" -o -z "${hostname}" -o -z "${port}" -o -z "${type}" ]; then
+	echo "login_name, hostname, port and type variables are needed"
 	exit 3
+fi
+if [ "${type}" = "remote" -o "${type}" = "local" ]; then
+	if [ -z "${hostport}" ]; then
+		echo "hostport variable is needed"
+		exit 3
+	fi
 fi
 
 if [ "${type}" = "remote" ]; then
-	tunnel_type="-R"
+	tunnel_cmd="-R ${port}:localhost:${hostport}"
 elif [ "${type}" = "local" ]; then
-	tunnel_type="-L"
+	tunnel_cmd="-L ${port}:localhost:${hostport}"
+elif [ "${type}" = "socks" ]; then
+	tunnel_cmd="-D ${port}"
 else
-	echo "Bad type, must be 'remote' or 'local', found :${type}"
+	echo "Bad type, must be 'remote', 'local' or 'socks', found :${type}"
 	exit 3
 fi
 
@@ -130,7 +139,7 @@ start() {
 
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
-		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} -nTN ${tunnel_type} ${port}:localhost:${hostport} ${login_name}@${hostname}
+		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} -nTN ${tunnel_cmd} ${login_name}@${hostname}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else

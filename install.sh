@@ -17,6 +17,7 @@ for script in *; do
 		echo "link created for ${script}"
 	fi
 done
+echo "To create another links: ln -s ${PWD}/${script} ${bin_dir}/foo.sh"
 
 type systemctl > /dev/null 2> /dev/null
 if [ $? -eq 0 ]; then
