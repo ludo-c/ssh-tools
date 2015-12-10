@@ -141,7 +141,9 @@ start() {
 
 		# man: In many ways ServerAliveInterval may be a better solution than the monitoring port.
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
-		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} -nTN ${tunnel_cmd} -p ${ssh_port} ${login_name}@${hostname}
+		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} \
+			autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} \
+			-nTN ${tunnel_cmd} -p ${ssh_port} ${login_name}@${hostname}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
@@ -158,7 +160,8 @@ test_login() {
 	#   1 if login is /bin/false
 	#   0 if login OK
 	date >> ${sshlogin_log_file}
-	eval ssh ${ssh_identity_file} -no ConnectTimeout=5 -E ${sshlogin_log_file} -p ${ssh_port} ${login_name}@${hostname} exit > /dev/null 2>&1
+	eval ssh ${ssh_identity_file} -no ConnectTimeout=5 -E ${sshlogin_log_file} \
+		-p ${ssh_port} ${login_name}@${hostname} exit > /dev/null 2>&1
 	if [ $? -eq 255 ]; then
 		return 4
 	else
