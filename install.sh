@@ -4,7 +4,7 @@ name=$(basename $0)
 bin_dir="${HOME}/bin"
 systemd_conf_dir="${HOME}/.config/systemd/user"
 
-[ ! -d "${bin_dir}" ] && mkdir ${bin_dir}
+[ ! -d "${bin_dir}" ] && mkdir -p ${bin_dir}
 
 for script in *; do
 	# link only files that are not already linked
@@ -21,7 +21,7 @@ echo "To create another links: ln -s ${PWD}/${script} ${bin_dir}/foo.sh"
 
 type systemctl > /dev/null 2> /dev/null
 if [ $? -eq 0 ]; then
-	[ ! -d "${systemd_conf_dir}" ] && mkdir ${systemd_conf_dir}
+	[ ! -d "${systemd_conf_dir}" ] && mkdir -p ${systemd_conf_dir}
 	for script in *.service; do
 		if [ ! -f ${systemd_conf_dir}/${script} ];then
 			# in order to "enable" service the file have to be copied, not symlinked
