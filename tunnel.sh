@@ -41,8 +41,8 @@ END
 	exit 3
 fi
 
-if [ -z "${login_name}" -o -z "${hostname}" -o -z "${port}" -o -z "${type}"  -o -z "${pub_fwd_port}" ]; then
-	echo "login_name, hostname, port, type and pub_fwd_port variables are needed"
+if [ -z "${login_name}" -o -z "${hostname}" -o -z "${port}" -o -z "${type}" ]; then
+	echo "login_name, hostname, port and type variables are needed"
 	exit 3
 fi
 if [ "${type}" = "remote" -o "${type}" = "local" ]; then
@@ -63,7 +63,13 @@ else
 	exit 3
 fi
 
-if [ "${pub_fwd_port}" = "yes" ]; then
+if [ -z "${ssh_port}" ]; then
+	ssh_port=22
+fi
+
+if [ -z "${pub_fwd_port}" ]; then
+	g=""
+elif [ "${pub_fwd_port}" = "yes" ]; then
 	g="-g"
 else
 	g=""
