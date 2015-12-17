@@ -33,14 +33,16 @@ hostport=
 ssh_port=22
 # Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)
 identity_file=
+# Allows remote hosts to connect to local forwarded ports (default no, need GatewayPorts option enabled on server)
+pub_fwd_port=no
 
 END
 	echo "config file ${config_file} created, please fill it"
 	exit 3
 fi
 
-if [ -z "${login_name}" -o -z "${hostname}" -o -z "${port}" -o -z "${type}" ]; then
-	echo "login_name, hostname, port and type variables are needed"
+if [ -z "${login_name}" -o -z "${hostname}" -o -z "${port}" -o -z "${type}"  -o -z "${pub_fwd_port}" ]; then
+	echo "login_name, hostname, port, type and pub_fwd_port variables are needed"
 	exit 3
 fi
 if [ "${type}" = "remote" -o "${type}" = "local" ]; then
@@ -59,6 +61,12 @@ elif [ "${type}" = "socks" ]; then
 else
 	echo "Bad type, must be 'remote', 'local' or 'socks', found :${type}"
 	exit 3
+fi
+
+if [ "${pub_fwd_port}" = "yes" ]; then
+	g="-g"
+else
+	g=""
 fi
 
 lf=/tmp/${name}.pid
@@ -143,7 +151,7 @@ start() {
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
 		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} \
 			autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} \
-			-nTN ${tunnel_cmd} -p ${ssh_port} ${login_name}@${hostname}
+			${g} -nTN ${tunnel_cmd} -p ${ssh_port} ${login_name}@${hostname}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
