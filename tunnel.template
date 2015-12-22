@@ -1,0 +1,18 @@
+# systemd startup script
+
+[Unit]
+Description=Create a tunnel at startup
+# after: sys-subsystem-net-devices-wlan0.device
+After=network.target
+
+[Service]
+ExecStart=/home/###user###/bin/###script### start
+ExecStop=/home/###user###/bin/###script### stop
+Type=forking
+PIDFile=/tmp/###script###.pid
+Environment="HOME=/home/###user###"
+Restart=always
+RestartSec=30sec
+
+[Install]
+WantedBy=default.target
