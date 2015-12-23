@@ -1,6 +1,9 @@
 # utils
+- install.sh: install script in ~/bin (can create severals symlinks) and systemd service file
 - tunnel.sh: create a socks proxy or remote|local port forwarding
-- tunnel.service: systemd autostart configuration
+- tunnel.template: systemd service file, used by install.sh
+
+Do not forget to add ~/bin in your path
 
 ## Dependencies
 - tunnel.sh depends of autossh
@@ -20,7 +23,12 @@ You can also generate a special private key (client side) with no passphrase in 
 You can use soft links to create multiple socks or tunnels. There will be a config file for each link.
 
 ```shell
+./install.sh socks.sh tunnel_local.sh
+```
+
+odl method:
+```shell
 cd $HOME/bin
 ln -s tunnel.sh socks.sh
-socks.sh # will create ~/.config/socks.sh.conf
+socks.sh  # will create ~/.config/socks.sh.conf
 ```
