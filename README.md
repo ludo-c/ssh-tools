@@ -26,7 +26,7 @@ You can use soft links to create multiple socks or tunnels. There will be a conf
 ./install.sh socks.sh tunnel_local.sh
 ```
 
-odl method:
+old method:
 ```shell
 cd $HOME/bin
 ln -s tunnel.sh socks.sh
