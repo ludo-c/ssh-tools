@@ -42,7 +42,7 @@ END
 fi
 
 if [ -z "${login_name}" -o -z "${hostname}" -o -z "${port}" -o -z "${type}" ]; then
-	echo "login_name, hostname, port and type variables are needed"
+	echo "login_name, hostname, port and type variables are needed in ${config_file}"
 	exit 3
 fi
 if [ "${type}" = "remote" -o "${type}" = "local" ]; then
