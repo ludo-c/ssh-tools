@@ -13,7 +13,7 @@ systemd=0
 
 [ ! -d "${bin_dir}" ] && mkdir -p ${bin_dir}
 # Is systemd installed here
-systemctl --version > /dev/null 2> /dev/null
+systemctl --version > /dev/null 2>&1
 if [ $? -eq 0 ]; then
 	[ ! -d "${systemd_conf_dir}" ] && mkdir -p ${systemd_conf_dir}
 	systemd=1
@@ -39,6 +39,20 @@ create_systemd_service() {
 			tunnel.template > ${systemd_conf_dir}/${base_script}.service
 	fi
 }
+
+for script in *; do
+	# link only files that are not already linked
+	# only executable files
+	# do not create link for this script
+	# and not for $origin script
+	if [ ! -f ${bin_dir}/${script} ] && \
+	   [ -x ${script} ] && \
+	   [ "${script}" != "${name}" ] && \
+	   [ "${script}" != "${origin}" ]; then
+		ln -s ${PWD}/${script} ${bin_dir}
+		echo "link created for ${script}"
+	fi
+done
 
 if [ $# -eq 0 ]; then
 	create_symlink ${origin}
