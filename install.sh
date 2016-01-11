@@ -55,8 +55,8 @@ for script in *; do
 done
 
 if [ $# -eq 0 ]; then
-	create_symlink ${origin}
-	create_systemd_service ${origin}
+	echo "Use: $0 foo.sh bar.sh ..."
+	echo "in order to create symlinks in ~/bin"
 else
 	for script in $*
 	do
