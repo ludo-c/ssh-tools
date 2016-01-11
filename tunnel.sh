@@ -30,7 +30,7 @@ port=
 # For 'remote' and 'local'
 hostport=
 # SSH port (default 22)
-ssh_port=22
+ssh_port=
 # Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)
 identity_file=
 # Allows remote hosts to connect to local forwarded ports (default no, need GatewayPorts option enabled on server)
@@ -63,8 +63,8 @@ else
 	exit 3
 fi
 
-if [ -z "${ssh_port}" ]; then
-	ssh_port=22
+if [ ! -z "${ssh_port}" ]; then
+	ssh_port="-p ${ssh_port}"
 fi
 
 if [ -z "${pub_fwd_port}" ]; then
@@ -157,7 +157,7 @@ start() {
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
 		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} \
 			autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} \
-			${g} -nTN ${tunnel_cmd} -p ${ssh_port} ${login_name}@${hostname}
+			${g} -nTN ${tunnel_cmd} ${ssh_port} ${login_name}@${hostname}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
@@ -175,7 +175,7 @@ test_login() {
 	#   0 if login OK
 	date >> ${sshlogin_log_file}
 	eval ssh ${ssh_identity_file} -no ConnectTimeout=5 -E ${sshlogin_log_file} \
-		-p ${ssh_port} ${login_name}@${hostname} exit > /dev/null 2>&1
+		${ssh_port} ${login_name}@${hostname} exit > /dev/null 2>&1
 	if [ $? -eq 255 ]; then
 		return 4
 	else
