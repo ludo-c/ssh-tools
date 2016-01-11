@@ -6,7 +6,7 @@ tunnel_script="tunnel.sh"
 server_directory="backup_tunnel_config"
 hostname=$(hostname)
 date=$(date +%Y-%m-%d_%H-%M-%S)
-archive="/tmp/config_tunnel_${hostname}_${date}.tar.gz"
+archive="/tmp/config_tunnel_${hostname}_${date}.tar"
 
 if [ $# -ne 1 ]; then
 	echo "Need server name or IP"
@@ -25,6 +25,13 @@ for script in ~/bin/* ; do
 done
 
 eval tar -cvf ${archive} -C ~/.config ${to_be_saved}
-scp ${archive} ${server}:${server_directory}
-rm ${archive}
+
+# add ssh config file
+if [ -f ~/.ssh/config ]; then
+	eval tar --append -vf ${archive} -C ~/.ssh/ config
+fi
+
+gzip ${archive}
+scp ${archive}.gz ${server}:${server_directory}
+rm ${archive}.gz
 
