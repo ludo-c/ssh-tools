@@ -5,6 +5,7 @@
 # with one or more arguments, create links with thoses names
 
 name=$(basename $0)
+uninstall_script="uninstall.sh"
 bin_dir="${HOME}/bin"
 systemd_conf_dir="${HOME}/.config/systemd/user"
 origin="tunnel.sh"
@@ -37,6 +38,7 @@ create_systemd_service() {
 		# remove extension
 		sed -e "s@###script###@${script}@" -e "s@###user###@${USER}@" \
 			tunnel.template > ${systemd_conf_dir}/${base_script}.service
+		echo "file ${systemd_conf_dir}/${base_script}.service created"
 	fi
 }
 
@@ -44,10 +46,12 @@ for script in *; do
 	# link only files that are not already linked
 	# only executable files
 	# do not create link for this script
+	# uninstall script neither
 	# and not for $origin script
 	if [ ! -f ${bin_dir}/${script} ] && \
 	   [ -x ${script} ] && \
 	   [ "${script}" != "${name}" ] && \
+	   [ "${script}" != "${uninstall_script}" ] && \
 	   [ "${script}" != "${origin}" ]; then
 		ln -s ${PWD}/${script} ${bin_dir}
 		echo "link created for ${script}"
@@ -66,6 +70,7 @@ else
 fi
 
 if [ ${print_systemd_msg} -eq 1 ]; then
+	echo ""
 	echo "Enable systemd services with :"
 	echo "systemctl --user daemon-reload"
 	echo "systemctl --user start <script>  # start service now"
