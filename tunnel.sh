@@ -121,16 +121,19 @@ send_signal() {
 				rm ${control_file}
 				echo "Control Master file ${control_file} deleted"
 			fi
+			echo -n "Stopping... "
 
 			# SIGTERM
 			kill -15 ${last_pid}
-			sleep 1
+			sleep 3
 			status
 			if [ $? -eq 0 ]; then
 				# SIGKILL
+				echo -n "(forced) "
 				kill -9 ${last_pid}
 				rm ${lf}
 			fi
+			echo "OK"
 			;;
 		restart)
 			# SIGUSR1
