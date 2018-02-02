@@ -64,7 +64,7 @@ else
 fi
 
 if [ ! -z "${ssh_port}" ]; then
-	ssh_port="-p ${ssh_port}"
+	ssh_port_opt="-p ${ssh_port}"
 fi
 
 if [ -z "${pub_fwd_port}" ]; then
@@ -114,6 +114,14 @@ send_signal() {
 		read last_pid < ${lf}
 		case $1 in
 		stop)
+			# Remove control master file. If not the connection cannot restart
+			# Assuming ControlPath is ~/.ssh/ssh-%r@%n:%p
+			control_file=${HOME}/.ssh/ssh-${login_name}@${hostname}:${ssh_port}
+			if [ -S ${control_file} ]; then
+				rm ${control_file}
+				echo "Control Master file ${control_file} deleted"
+			fi
+
 			# SIGTERM
 			kill -15 ${last_pid}
 			sleep 1
@@ -157,7 +165,7 @@ start() {
 		# some versions of autossh doesn't set the AUTOSSH_GATETIME to 0 when -f is used
 		eval AUTOSSH_GATETIME=0 AUTOSSH_PIDFILE=${lf} AUTOSSH_LOGFILE=${autossh_log_file} \
 			autossh -f -M0 -- ${ssh_options} ${ssh_identity_file} -E ${ssh_log_file} \
-			${g} -nTN ${tunnel_cmd} ${ssh_port} ${login_name}@${hostname}
+			${g} -nTN ${tunnel_cmd} ${ssh_port_opt} ${login_name}@${hostname}
 		if [ $? -eq 0 ]; then
 			echo "OK"
 		else
@@ -175,7 +183,7 @@ test_login() {
 	#   0 if login OK
 	date >> ${sshlogin_log_file}
 	eval ssh ${ssh_identity_file} -no ConnectTimeout=5 -E ${sshlogin_log_file} \
-		${ssh_port} ${login_name}@${hostname} exit > /dev/null 2>&1
+		${ssh_port_opt} ${login_name}@${hostname} exit > /dev/null 2>&1
 	if [ $? -eq 255 ]; then
 		return 4
 	else
