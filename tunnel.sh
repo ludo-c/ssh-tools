@@ -114,24 +114,23 @@ send_signal() {
 		read last_pid < ${lf}
 		case $1 in
 		stop)
-			# Remove control master file. If not the connection cannot restart
+			echo -n "Stopping... "
+
+			# SIGKILL on autossh
+			kill -3 ${last_pid}
+
+			# Kill ssh. Autossh does not kill ssh when using tunneling
+			# Get the pid of the autossh's child process
+			# or ps -e -o pid,ppid | nawk '{ if ($2 == ${last_pid}) print $1; }'
+			ssh_pid=$(ps -h -o pid --ppid ${last_pid})
+			kill ${ssh_pid}
+
+			# Remove control master file if needed. If not the connection cannot restart
 			# Assuming ControlPath is ~/.ssh/ssh-%r@%n:%p
 			control_file=${HOME}/.ssh/ssh-${login_name}@${hostname}:${ssh_port}
 			if [ -S ${control_file} ]; then
 				rm ${control_file}
 				echo "Control Master file ${control_file} deleted"
-			fi
-			echo -n "Stopping... "
-
-			# SIGTERM
-			kill -15 ${last_pid}
-			sleep 3
-			status
-			if [ $? -eq 0 ]; then
-				# SIGKILL
-				echo -n "(forced) "
-				kill -9 ${last_pid}
-				rm ${lf}
 			fi
 			echo "OK"
 			;;
@@ -140,7 +139,7 @@ send_signal() {
 			kill -10 ${last_pid}
 			;;
 		*)
-			# impossible case
+			echo "Impossible case"
 			return 1
 			;;
 		esac
