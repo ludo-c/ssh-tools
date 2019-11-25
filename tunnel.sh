@@ -122,11 +122,12 @@ send_signal() {
 			# Kill ssh. Autossh does not kill ssh when using tunneling
 			# Get the pid of the autossh's child process
 			# or ps -e -o pid,ppid | nawk '{ if ($2 == ${last_pid}) print $1; }'
-			ssh_pid=$(ps -h -o pid --ppid ${last_pid})
-			kill ${ssh_pid}
+			ps -h -o pid --ppid ${last_pid} | xargs -r kill
 
 			# Remove control master file if needed. If not the connection cannot restart
 			# Assuming ControlPath is ~/.ssh/ssh-%r@%n:%p
+			# There is no use of control master file here, but the configuration
+			# could have created it (in ~/.ssh/config)
 			control_file=${HOME}/.ssh/ssh-${login_name}@${hostname}:${ssh_port}
 			if [ -S ${control_file} ]; then
 				rm ${control_file}
