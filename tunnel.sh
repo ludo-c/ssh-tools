@@ -15,6 +15,7 @@
 
 name=$(basename $0)
 config_file=${HOME}/.config/${name}.conf
+ssh_control_path=${HOME}/.ssh/${name}.socket
 
 [ ! -d "$(dirname ${config_file})" ] && mkdir -p "$(dirname ${config_file})"
 if [ -f "${config_file}" ]; then
@@ -76,7 +77,8 @@ else
 fi
 
 lf=/tmp/${name}.pid
-ssh_options="-o ExitOnForwardFailure=yes -o ServerAliveInterval=30"
+# Try to ignore ~/.ssh/config but does not seems to work
+ssh_options="-F /dev/null -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -M -S ${ssh_control_path}"
 ssh_log_file="/tmp/${name}-ssh.log"
 autossh_log_file="/tmp/${name}-autossh.log"
 sshlogin_log_file="/tmp/${name}-sshlogin.log"
@@ -114,7 +116,7 @@ send_signal() {
 		read last_pid < ${lf}
 		case $1 in
 		stop)
-			echo -n "Stopping... "
+			echo "Stopping... "
 
 			# SIGKILL on autossh
 			kill -3 ${last_pid}
@@ -122,15 +124,17 @@ send_signal() {
 			# Kill ssh. Autossh does not kill ssh when using tunneling
 			# Get the pid of the autossh's child process
 			# or ps -e -o pid,ppid | nawk '{ if ($2 == ${last_pid}) print $1; }'
-			ps -h -o pid --ppid ${last_pid} | xargs -r kill
+			#ps -h -o pid --ppid ${last_pid} | xargs -r kill
+			# Or use the ssh way to do it
+			ssh -S ${ssh_control_path} -O exit ${login_name}@${hostname}
 
-			# Remove control master file if needed. If not the connection cannot restart
+			# Remove control master file if one has been defined
+			# in the configuration file (in ~/.ssh/config).
+			# If not the connection cannot restart.
 			# Assuming ControlPath is ~/.ssh/ssh-%r@%n:%p
-			# There is no use of control master file here, but the configuration
-			# could have created it (in ~/.ssh/config)
 			control_file=${HOME}/.ssh/ssh-${login_name}@${hostname}:${ssh_port}
 			if [ -S ${control_file} ]; then
-				rm ${control_file}
+				ssh -S ${control_file} -O exit ${login_name}@${hostname}
 				echo "Control Master file ${control_file} deleted"
 			fi
 			echo "OK"
