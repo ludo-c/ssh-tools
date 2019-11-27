@@ -116,17 +116,29 @@ send_signal() {
 		read last_pid < ${lf}
 		case $1 in
 		stop)
-			echo "Stopping... "
+			echo -n "Stopping... "
 
-			# SIGKILL on autossh
-			kill -3 ${last_pid}
+			# SIGTERM on autossh (SIGKILL does not kill ssh, SIGTERM seems to kill it)
+			kill ${last_pid}
+			# Give autossh time to clean everything
+			status
+			st=$?
+			while [ ${st} -eq 0 ]; do
+				sleep 0.1
+				status
+				st=$?
+			done
+
+			# In case there is a problem, remove control files
 
 			# Kill ssh. Autossh does not kill ssh when using tunneling
 			# Get the pid of the autossh's child process
 			# or ps -e -o pid,ppid | nawk '{ if ($2 == ${last_pid}) print $1; }'
 			#ps -h -o pid --ppid ${last_pid} | xargs -r kill
 			# Or use the ssh way to do it
-			ssh -S ${ssh_control_path} -O exit ${login_name}@${hostname}
+			if [ -S ${ssh_control_path} ]; then
+				ssh -S ${ssh_control_path} -O exit ${login_name}@${hostname}
+			fi
 
 			# Remove control master file if one has been defined
 			# in the configuration file (in ~/.ssh/config).
@@ -135,7 +147,6 @@ send_signal() {
 			control_file=${HOME}/.ssh/ssh-${login_name}@${hostname}:${ssh_port}
 			if [ -S ${control_file} ]; then
 				ssh -S ${control_file} -O exit ${login_name}@${hostname}
-				echo "Control Master file ${control_file} deleted"
 			fi
 			echo "OK"
 			;;
