@@ -123,11 +123,17 @@ send_signal() {
 			# Give autossh time to clean everything
 			status
 			st=$?
-			while [ ${st} -eq 0 ]; do
+			counter=0
+			while [ ${st} -eq 0 -a $counter -lt 10 ]; do
 				sleep 0.1
 				status
 				st=$?
+				counter=$((counter+1))
 			done
+
+			if [ $counter -eq 10 ]; then
+				kill -9 ${last_pid}
+			fi
 
 			# In case there is a problem, remove control files
 
