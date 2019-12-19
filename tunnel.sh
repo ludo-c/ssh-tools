@@ -12,6 +12,7 @@
 #           2 process is already running
 #           3 configuration file error
 #           4 login error
+#           5 check error
 
 name=$(basename $0)
 config_file=${HOME}/.config/${name}.conf
@@ -242,8 +243,21 @@ test)
 	test_login
 	exit $?
 	;;
+check)
+	# eg. nc -W1 192.168.42.129 2222
+	nc -W1 ${hostname} ${ssh_port} > /dev/null
+	if [ $? -ne 0 ]; then
+		echo "restart connexion"
+		send_signal restart
+		nc -W1 ${hostname} ${ssh_port} > /dev/null
+		if [ $? -ne 0 ]; then
+			echo "Still failing, abort"
+			exit 5
+		fi
+	fi
+	;;
 *)
-	echo "Usage: ${name} {start|stop|restart|status|latency|test}" >&2
+	echo "Usage: ${name} {start|stop|restart|status|latency|test|check}" >&2
 	exit 1
 	;;
 esac
