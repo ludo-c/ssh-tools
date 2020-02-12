@@ -144,7 +144,7 @@ send_signal() {
 			#ps -h -o pid --ppid ${last_pid} | xargs -r kill
 			# Or use the ssh way to do it
 			if [ -S ${ssh_control_path} ]; then
-				ssh -S ${ssh_control_path} -O exit ${login_name}@${hostname}
+				ssh -S ${ssh_control_path} -O exit ${ssh_port_opt} ${login_name}@${hostname}
 			fi
 
 			# Remove control master file if one has been defined
@@ -153,7 +153,7 @@ send_signal() {
 			# Assuming ControlPath is ~/.ssh/ssh-%r@%n:%p
 			control_file=${HOME}/.ssh/ssh-${login_name}@${hostname}:${ssh_port}
 			if [ -S ${control_file} ]; then
-				ssh -S ${control_file} -O exit ${login_name}@${hostname}
+				ssh -S ${control_file} -O exit ${ssh_port_opt} ${login_name}@${hostname}
 			fi
 			echo "OK"
 			;;
