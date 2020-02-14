@@ -146,7 +146,11 @@ send_signal() {
 			if [ -S ${ssh_control_path} ]; then
 				#ssh -S ${ssh_control_path} -O exit ${ssh_port_opt} ${login_name}@${hostname}
 				# https://bugzilla.mindrot.org/show_bug.cgi?id=2889
-				ssh -S ${ssh_control_path} -O exit pwet
+				# Can failed with error:
+				#    muxclient: master hello exchange failed
+				#    ssh: Could not resolve hostname pwet: Temporary failure in name resolution
+				# Fix it with 127.0.0.1 instead of "pwet" in the hostname
+				ssh -S ${ssh_control_path} -O exit 127.0.0.1
 			fi
 
 			# Remove control master file if one has been defined
@@ -157,7 +161,7 @@ send_signal() {
 			if [ -S ${control_file} ]; then
 				#ssh -S ${control_file} -O exit ${ssh_port_opt} ${login_name}@${hostname}
 				# https://bugzilla.mindrot.org/show_bug.cgi?id=2889
-				ssh -S ${control_file} -O exit pwet
+				ssh -S ${control_file} -O exit 127.0.0.1
 			fi
 			echo "OK"
 			;;
