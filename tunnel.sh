@@ -136,6 +136,8 @@ send_signal() {
 				kill -9 ${last_pid}
 			fi
 
+			echo "OK"
+
 			# In case there is a problem, remove control files
 
 			# Kill ssh. Autossh does not kill ssh when using tunneling
@@ -145,12 +147,15 @@ send_signal() {
 			# Or use the ssh way to do it
 			if [ -S ${ssh_control_path} ]; then
 				#ssh -S ${ssh_control_path} -O exit ${ssh_port_opt} ${login_name}@${hostname}
+				# ssh need an argument, use 'pwet' here, see bug:
 				# https://bugzilla.mindrot.org/show_bug.cgi?id=2889
-				# Can failed with error:
+				# Can failed with error: (don't known why)
+				#    debug2: fd 3 setting O_NONBLOCK
+				#    debug1: mux_client_hello_exchange: read packet failed
 				#    muxclient: master hello exchange failed
 				#    ssh: Could not resolve hostname pwet: Temporary failure in name resolution
-				# Fix it with 127.0.0.1 instead of "pwet" in the hostname
-				ssh -S ${ssh_control_path} -O exit 127.0.0.1
+				echo "Removing ${ssh_control_path}"
+				ssh -vvv -S ${ssh_control_path} -O exit pwet
 			fi
 
 			# Remove control master file if one has been defined
@@ -161,9 +166,9 @@ send_signal() {
 			if [ -S ${control_file} ]; then
 				#ssh -S ${control_file} -O exit ${ssh_port_opt} ${login_name}@${hostname}
 				# https://bugzilla.mindrot.org/show_bug.cgi?id=2889
-				ssh -S ${control_file} -O exit 127.0.0.1
+				echo "Removing ${control_file}"
+				ssh -vvv -S ${control_file} -O exit pwet
 			fi
-			echo "OK"
 			;;
 		restart)
 			# SIGUSR1
