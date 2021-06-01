@@ -27,17 +27,16 @@ login_name=
 hostname=
 # Type can be 'remote', 'local' or 'socks'
 type=
-# For 'remote', 'local' and 'socks'
+# Port number. Used with types 'remote', 'local' and 'socks'.
 port=
-# For 'remote' and 'local'
+# Second port number. Used with types 'remote' and 'local' only.
 hostport=
 # SSH port (default 22)
-ssh_port=
+ssh_port=22
 # Private key stored in ~/.ssh with no passphrase for restricted remote user (optional)
 identity_file=
 # Allows remote hosts to connect to local forwarded ports (default no, need GatewayPorts option enabled on server)
 pub_fwd_port=no
-
 END
 	echo "config file ${config_file} created, please fill it"
 	exit 3
