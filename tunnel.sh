@@ -1,4 +1,8 @@
 #!/bin/sh
+#set -x
+set -u
+#set -eE
+#set -o pipefail
 # Create a ssh socks proxy or remote|local port forwarding
 # http://artisan.karma-lab.net/faire-passer-trafic-tunnel-ssh
 #
@@ -102,12 +106,12 @@ status() {
 		read last_pid < ${lf}
 	fi
 	# if last_pid is not null and a process with that pid exists, exit
-	if [ ! -z "${last_pid}" -a -d /proc/${last_pid} ]; then
+	if [ ! -z "${last_pid-}" -a -d /proc/${last_pid-} ]; then
 		# check that the process is not a recycled one (at least, it's autossh)
 		eval grep autossh /proc/${last_pid}/cmdline > /dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			rc=0
-			if [ ! -z "$1" ]; then
+			if [ ! -z "${1-}" ]; then
 				latency=$(nmap -sP ${hostname} | grep -Eo '[[:digit:]]+\.[[:digit:]]+s' | tr -d 's')
 				echo ${latency}
 			fi
@@ -225,8 +229,9 @@ test_login() {
 	#   1 if login is /bin/false
 	#   0 if login OK
 	date >> ${sshlogin_log_file}
-	eval ssh ${ssh_identity_file} -no ConnectTimeout=5 -E ${sshlogin_log_file} \
-		${ssh_port_opt} ${login_name}@${hostname} exit > /dev/null 2>&1
+	cmd="ssh ${ssh_identity_file} -no ConnectTimeout=5 -E ${sshlogin_log_file} \
+		${ssh_port_opt} ${login_name}@${hostname} exit > /dev/null 2>&1"
+	eval $cmd
 	if [ $? -eq 255 ]; then
 		return 4
 	else
