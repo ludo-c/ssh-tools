@@ -85,7 +85,13 @@ sshlogin_log_file="/tmp/${name}-sshlogin.log"
 ssh_identity_file=""
 if [ ! -z ${identity_file} ]; then
 	ssh_identity_file="-i ${HOME}/.ssh/${identity_file}"
+else
+	ssh_identity_file="-i id_ed25519"
 fi
+
+#export AUTOSSH_PATH=$HOME"/opt/openssh-portable/ssh"
+#SSH=$HOME"/opt/openssh-portable/ssh"
+SSH=$(which ssh)
 
 # return 0 if running, 2 otherwise
 status() {
@@ -154,7 +160,7 @@ send_signal() {
 				#    muxclient: master hello exchange failed
 				#    ssh: Could not resolve hostname pwet: Temporary failure in name resolution
 				echo "Removing ${ssh_control_path}"
-				ssh -vvv -S ${ssh_control_path} -O exit pwet
+				${SSH} -vvv -S ${ssh_control_path} -O exit pwet
 			fi
 
 			# Remove control master file if one has been defined
@@ -166,7 +172,7 @@ send_signal() {
 				#ssh -S ${control_file} -O exit ${ssh_port_opt} ${login_name}@${hostname}
 				# https://bugzilla.mindrot.org/show_bug.cgi?id=2889
 				echo "Removing ${control_file}"
-				ssh -vvv -S ${control_file} -O exit pwet
+				${SSH} -vvv -S ${control_file} -O exit pwet
 			fi
 			;;
 		restart)
